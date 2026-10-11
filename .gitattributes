@@ -1,0 +1,10 @@
+# 第三方库不做换行符转换，保持原样
+vendor/** text=none
+*.min.js text=none
+
+# 文本文件默认自动处理换行
+*.html text
+*.css text
+*.js text
+*.md text
+*.py text

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>实验室设备预约系统</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-inner">
+    <div class="brand">
+      <span class="brand-logo">LAB</span>
+      <div>
+        <h1>实验室设备预约系统</h1>
+        <p class="brand-sub">工程训练中心 · 设备时段在线预约</p>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-tab="booking">设备预约</button>
+      <button class="tab" data-tab="mine">我的预约</button>
+      <button class="tab" data-tab="dashboard">数据看板</button>
+      <button class="tab" data-tab="help">使用说明</button>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- 设备预约 -->
+  <section id="page-booking" class="page active">
+    <div class="page-head">
+      <h2>设备台账</h2>
+      <p class="muted">选择设备与时段提交预约，同一设备同一时段不可重复预约。</p>
+    </div>
+    <div class="equip-grid" id="equipGrid"></div>
+  </section>
+
+  <!-- 我的预约 -->
+  <section id="page-mine" class="page">
+    <div class="page-head">
+      <h2>我的预约</h2>
+      <p class="muted">输入学号查询你的预约记录，可取消未到期的预约。</p>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="mineSid" placeholder="请输入学号，如 2023123456" maxlength="20">
+      <button class="btn btn-primary" id="btnQueryMine">查询</button>
+    </div>
+    <div id="mineList" class="mine-list"></div>
+  </section>
+
+  <!-- 数据看板 -->
+  <section id="page-dashboard" class="page">
+    <div class="page-head">
+      <h2>数据看板</h2>
+      <div class="head-actions">
+        <button class="btn btn-ghost" id="btnExport">导出预约记录 (CSV)</button>
+      </div>
+    </div>
+    <div class="stat-grid" id="statGrid"></div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>各设备预约次数</h3>
+        <div id="chartEquip" class="chart-box"></div>
+      </div>
+      <div class="chart-card">
+        <h3>时段分布</h3>
+        <div id="chartSlot" class="chart-box"></div>
+      </div>
+      <div class="chart-card chart-wide">
+        <h3>近 7 天站点访问量（PV）</h3>
+        <div id="chartPV" class="chart-box"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用说明 -->
+  <section id="page-help" class="page">
+    <div class="page-head"><h2>使用说明</h2></div>
+    <div class="doc-card">
+      <h3>预约规则</h3>
+      <ol>
+        <li>在「设备预约」页选择设备，点击「预约」。</li>
+        <li>选择日期（不可早于今天）和时段，填写姓名、学号、用途后提交。</li>
+        <li>同一设备、同一天、同一时段只接受一条有效预约，冲突时会被拒绝并提示。</li>
+        <li>在「我的预约」页凭学号查询，可取消未到期的预约释放名额。</li>
+      </ol>
+      <h3>数据说明</h3>
+      <p class="muted">本站为纯前端静态应用，预约与访问数据保存在浏览器 localStorage 中；数据看板由 ECharts 渲染，支持导出 CSV 存档。</p>
+    </div>
+  </section>
+</main>
+
+<!-- 预约模态框 -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">预约设备</h3>
+      <button class="modal-close" id="modalClose">×</button>
+    </div>
+    <form id="bookingForm" class="modal-body">
+      <input type="hidden" id="fEquipId">
+      <div class="form-row">
+        <label>预约日期 <span class="req">*</span></label>
+        <input type="date" id="fDate" required>
+      </div>
+      <div class="form-row">
+        <label>选择时段 <span class="req">*</span></label>
+        <div class="slot-group" id="slotGroup"></div>
+      </div>
+      <div class="form-row">
+        <label>姓名 <span class="req">*</span></label>
+        <input type="text" id="fName" placeholder="请输入真实姓名" maxlength="20" required>
+      </div>
+      <div class="form-row">
+        <label>学号 <span class="req">*</span></label>
+        <input type="text" id="fSid" placeholder="请输入学号" maxlength="20" required>
+      </div>
+      <div class="form-row">
+        <label>用途说明 <span class="req">*</span></label>
+        <textarea id="fPurpose" rows="2" placeholder="如：课程设计零件打印" maxlength="100" required></textarea>
+      </div>
+      <p class="form-msg" id="formMsg"></p>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="btnCancelForm">取消</button>
+        <button type="submit" class="btn btn-primary">提交预约</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 通用提示 toast -->
+<div id="toast" class="toast"></div>
+
+<footer class="site-footer">
+  <div class="container">
+    <p>Vibe Coding 课程实践 · 吴辰枫 · 数据存储于本地浏览器，图表由 ECharts 5 驱动</p>
+  </div>
+</footer>
+
+<script src="vendor/echarts.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
