@@ -24,7 +24,8 @@
 - 纯前端：原生 HTML + CSS + JavaScript（无构建步骤，无框架依赖）
 - 数据存储：浏览器 `localStorage`
 - 外部开源组件：**[Apache ECharts 5.5.1](https://echarts.apache.org/)**（图表）
-- 部署：Gitee Pages 静态托管（0 成本、0 后端）
+- 部署：GitHub Pages 静态托管（0 成本、0 后端；Gitee Pages 已下线）
+- 🌐 线上地址：**https://huanz1.github.io/project1/**
 
 ## 本地运行
 
