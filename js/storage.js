@@ -58,26 +58,38 @@ const Store = {
   cancelBooking(id) {
     const list = this.getBookings();
     const b = list.find(x => x.id === id);
-    if (b) { b.status = 'cancelled'; this.saveBookings(list); }
+    if (b) {
+      /* 业务规则兜底：仅 active 且未到期的预约可取消 */
+      if (b.status !== 'active') return b;
+      if (b.date < localDateStr()) return b;
+      b.status = 'cancelled';
+      this.saveBookings(list);
+    }
     return b;
+  },
+
+  /* 统计读取兜底（K_STATS 缺失时返回默认结构，避免 null 崩溃） */
+  _getStats() {
+    return JSON.parse(localStorage.getItem(K_STATS) ||
+      '{"pvTotal":0,"pvDaily":{},"formSubmits":0}');
   },
 
   /* 访问统计 */
   recordVisit() {
-    const s = JSON.parse(localStorage.getItem(K_STATS));
-    const today = new Date().toISOString().slice(0, 10);
+    const s = this._getStats();
+    const today = localDateStr();
     s.pvTotal += 1;
     s.pvDaily[today] = (s.pvDaily[today] || 0) + 1;
     localStorage.setItem(K_STATS, JSON.stringify(s));
   },
 
   recordFormSubmit() {
-    const s = JSON.parse(localStorage.getItem(K_STATS));
+    const s = this._getStats();
     s.formSubmits += 1;
     localStorage.setItem(K_STATS, JSON.stringify(s));
   },
 
   getStats() {
-    return JSON.parse(localStorage.getItem(K_STATS));
+    return this._getStats();
   }
 };

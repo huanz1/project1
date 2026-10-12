@@ -2,7 +2,7 @@
 let currentEquip = null;
 let selectedSlot = null;
 const charts = {};
-const todayStr = () => new Date().toISOString().slice(0, 10);
+const todayStr = () => localDateStr();
 
 /* ---------- 通用提示 ---------- */
 function toast(msg, type = '') {
@@ -125,9 +125,9 @@ function queryMine() {
     return `
       <div class="booking-item">
         <div class="bi-main">
-          <span class="bi-title">${b.equipName} <span class="badge ${b.status === 'active' ? 'ok' : 'cancel'}">${b.status === 'active' ? (expired ? '已过期' : '有效') : '已取消'}</span></span>
+          <span class="bi-title">${escapeHtml(b.equipName)} <span class="badge ${b.status === 'active' ? 'ok' : 'cancel'}">${b.status === 'active' ? (expired ? '已过期' : '有效') : '已取消'}</span></span>
           <span class="bi-sub">📅 ${b.date}　🕐 ${b.slotLabel}</span>
-          <span class="bi-sub">用途：${b.purpose}</span>
+          <span class="bi-sub">用途：${escapeHtml(b.purpose)}</span>
         </div>
         ${canCancel ? `<button class="btn btn-danger btn-sm" data-id="${b.id}">取消预约</button>` : ''}
       </div>`;
@@ -188,7 +188,7 @@ function renderDashboard() {
   const days = [], pvs = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
-    const key = d.toISOString().slice(0, 10);
+    const key = localDateStr(d);
     days.push(key.slice(5));
     pvs.push(stats.pvDaily[key] || 0);
   }

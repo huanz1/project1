@@ -1,4 +1,25 @@
 /* 种子数据：设备台账与时段定义（首次加载写入 localStorage） */
+
+/* 本地日期字符串（YYYY-MM-DD）。
+   注意：不能用 new Date().toISOString().slice(0,10)——那是 UTC，
+   中国 UTC+8 在凌晨 0~8 点会算到前一天。 */
+function localDateStr(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/* 转义 HTML，防止用户输入（姓名/用途等）经 innerHTML 造成 XSS */
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 const SEED_EQUIPMENT = [
   { id: 'e1', name: '3D 打印机', icon: '🖨️', location: '工程训练中心 114-A', desc: 'FDM 熔融沉积，最大 220×220×250mm' },
   { id: 'e2', name: '激光切割机', icon: '✂️', location: '工程训练中心 114-B', desc: '60W CO₂，加工幅面 600×400mm' },
@@ -19,7 +40,7 @@ const TIME_SLOTS = [
 /* 演示用种子预约：给看板预置几条真实数据（仅首次初始化时写入） */
 function seedBookings() {
   const today = new Date();
-  const fmt = (d) => d.toISOString().slice(0, 10);
+  const fmt = (d) => localDateStr(d);
   const offset = (n) => { const d = new Date(today); d.setDate(d.getDate() + n); return fmt(d); };
   return [
     { id: 'b' + Date.now() + 1, equipId: 'e1', equipName: '3D 打印机', date: offset(1), slotId: 's1', slotLabel: '08:00 - 10:00', name: '张同学', sid: '20230101', purpose: '课程设计外壳打印', createdAt: new Date().toISOString(), status: 'active' },
