@@ -1,7 +1,9 @@
 # 实验室设备预约系统
 
+[![CI](https://github.com/huanz1/project1/actions/workflows/ci.yml/badge.svg)](https://github.com/huanz1/project1/actions/workflows/ci.yml)
+
 > Vibe Coding 集中实践 · 个人项目（题库第 5 题）
-> 作者：吴辰枫 ｜ 线上地址：见 `docs/部署手册.md`
+> 作者：吴辰枫 ｜ 线上地址：https://huanz1.github.io/project1/ （详见 `docs/部署手册.md`）
 
 ## 一句话介绍
 
