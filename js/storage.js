@@ -55,13 +55,26 @@ const Store = {
     return set;
   },
 
+  /* 预约聚合统计（看板/卡片复用，避免视图层反复 filter 计数）。
+     一次遍历同时得到按设备、按时段的计数。 */
+  getBookingSummary() {
+    const active = this.getBookings().filter(b => b.status === 'active');
+    const byEquipment = {};
+    const bySlot = {};
+    active.forEach(b => {
+      byEquipment[b.equipId] = (byEquipment[b.equipId] || 0) + 1;
+      bySlot[b.slotId] = (bySlot[b.slotId] || 0) + 1;
+    });
+    return { active, byEquipment, bySlot };
+  },
+
   cancelBooking(id) {
     const list = this.getBookings();
     const b = list.find(x => x.id === id);
     if (b) {
-      /* 业务规则兜底：仅 active 且未到期的预约可取消 */
+      /* 业务规则兜底：仅 active 且未到期（精确到当天时段）的预约可取消 */
       if (b.status !== 'active') return b;
-      if (b.date < localDateStr()) return b;
+      if (isBookingExpired(b)) return b;
       b.status = 'cancelled';
       this.saveBookings(list);
     }

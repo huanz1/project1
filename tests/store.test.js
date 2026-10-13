@@ -21,9 +21,9 @@ function loadStore() {
   const bundle =
     fs.readFileSync(path.join(jsDir, 'data.js'), 'utf8') + '\n' +
     fs.readFileSync(path.join(jsDir, 'storage.js'), 'utf8') + '\n' +
-    'this.Store = Store;';
+    'this.Store = Store; this.isBookingExpired = isBookingExpired;';
   vm.runInContext(bundle, ctx);
-  return { Store: ctx.Store, localStorage };
+  return { Store: ctx.Store, isBookingExpired: ctx.isBookingExpired, localStorage };
 }
 
 /* R1：首次初始化写入种子数据（6 台设备、6 条预约、统计初始） */
@@ -96,4 +96,17 @@ test('R5 新预约落库后该时段变为占用', () => {
   assert.strictEqual(Store.getBookings().length, before + 1);
   assert.ok(Store.occupiedSlots('e1', '2099-06-01').has('s1'));
   assert.strictEqual(Store.hasConflict('e1', '2099-06-01', 's1'), true);
+});
+
+/* 附加：到期判定精确到当天时段（D2 整改），用固定时刻保证稳定 */
+test('R6 当天预约按时段结束判定到期，不只是看日期', () => {
+  const { isBookingExpired } = loadStore();
+  const mk = (date, slotId) => ({ date, slotId });
+  const at = (h, m = 0) => new Date(2026, 9, 13, h, m); // 以 2026-10-13 为基准
+  // 当天 s1 结束于 10:00
+  assert.strictEqual(isBookingExpired(mk('2026-10-13', 's1'), at(9)), false);
+  assert.strictEqual(isBookingExpired(mk('2026-10-13', 's1'), at(10, 30)), true);
+  // 明天未到期、昨天已到期
+  assert.strictEqual(isBookingExpired(mk('2026-10-14', 's1'), at(23)), false);
+  assert.strictEqual(isBookingExpired(mk('2026-10-12', 's1'), at(8)), true);
 });

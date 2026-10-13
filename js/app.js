@@ -23,9 +23,9 @@ function switchTab(name) {
 /* ---------- 设备卡片 ---------- */
 function renderEquipment() {
   const grid = document.getElementById('equipGrid');
-  const active = Store.getBookings().filter(b => b.status === 'active');
+  const { byEquipment } = Store.getBookingSummary();
   grid.innerHTML = Store.getEquipment().map(e => {
-    const count = active.filter(b => b.equipId === e.id).length;
+    const count = byEquipment[e.id] || 0;
     return `
       <div class="equip-card">
         <div class="eq-top">
@@ -62,6 +62,8 @@ function closeModal() {
 }
 
 function renderSlots() {
+  /* 日期变化/重渲染时清空已选时段，防止旧时段残留被误提交到新日期（D1） */
+  selectedSlot = null;
   const date = document.getElementById('fDate').value;
   const wrap = document.getElementById('slotGroup');
   const occupied = date ? Store.occupiedSlots(currentEquip.id, date) : new Set();
@@ -120,7 +122,7 @@ function queryMine() {
     .sort((a, b) => (a.date + a.slotId).localeCompare(b.date + b.slotId));
   if (!list.length) { wrap.innerHTML = '<div class="empty">未查询到该学号的预约记录</div>'; return; }
   wrap.innerHTML = list.map(b => {
-    const expired = b.date < todayStr();
+    const expired = isBookingExpired(b);
     const canCancel = b.status === 'active' && !expired;
     return `
       <div class="booking-item">
@@ -142,8 +144,7 @@ function queryMine() {
 
 /* ---------- 数据看板 ---------- */
 function renderDashboard() {
-  const bookings = Store.getBookings();
-  const active = bookings.filter(b => b.status === 'active');
+  const { active, byEquipment, bySlot } = Store.getBookingSummary();
   const stats = Store.getStats();
   const today = todayStr();
   const todayPV = stats.pvDaily[today] || 0;
@@ -158,9 +159,10 @@ function renderDashboard() {
 
   /* 图1：各设备预约次数 */
   const equipData = Store.getEquipment().map(e => ({
-    name: e.name, value: active.filter(b => b.equipId === e.id).length
+    name: e.name, value: byEquipment[e.id] || 0
   }));
   ensureChart('chartEquip').setOption({
+    animation: false,
     tooltip: { trigger: 'axis' },
     grid: { left: 40, right: 20, top: 24, bottom: 40 },
     xAxis: { type: 'category', data: equipData.map(d => d.name), axisLabel: { interval: 0, fontSize: 11, rotate: 18 } },
@@ -170,9 +172,10 @@ function renderDashboard() {
 
   /* 图2：时段分布（饼图） */
   const slotData = TIME_SLOTS.map(s => ({
-    name: s.label, value: active.filter(b => b.slotId === s.id).length
+    name: s.label, value: bySlot[s.id] || 0
   })).filter(d => d.value > 0);
   ensureChart('chartSlot').setOption({
+    animation: false,
     tooltip: { trigger: 'item', formatter: '{b}<br/>{c} 条 ({d}%)' },
     legend: { bottom: 0, type: 'scroll', textStyle: { fontSize: 11 } },
     series: [{
@@ -193,6 +196,7 @@ function renderDashboard() {
     pvs.push(stats.pvDaily[key] || 0);
   }
   ensureChart('chartPV').setOption({
+    animation: false,
     tooltip: { trigger: 'axis' },
     grid: { left: 40, right: 24, top: 24, bottom: 30 },
     xAxis: { type: 'category', data: days, boundaryGap: false },

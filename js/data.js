@@ -30,12 +30,25 @@ const SEED_EQUIPMENT = [
 ];
 
 const TIME_SLOTS = [
-  { id: 's1', label: '08:00 - 10:00' },
-  { id: 's2', label: '10:00 - 12:00' },
-  { id: 's3', label: '14:00 - 16:00' },
-  { id: 's4', label: '16:00 - 18:00' },
-  { id: 's5', label: '19:00 - 21:00' },
+  { id: 's1', label: '08:00 - 10:00', endHour: 10 },
+  { id: 's2', label: '10:00 - 12:00', endHour: 12 },
+  { id: 's3', label: '14:00 - 16:00', endHour: 16 },
+  { id: 's4', label: '16:00 - 18:00', endHour: 18 },
+  { id: 's5', label: '19:00 - 21:00', endHour: 21 },
 ];
+
+/* 判断预约是否已到期：
+   日期早于今天 → 到期；日期晚于今天 → 未到期；
+   当天则比较当前时刻与时段结束时间（精确到小时，而非只看日期）。 */
+function isBookingExpired(b, now = new Date()) {
+  const today = localDateStr(now);
+  if (b.date < today) return true;
+  if (b.date > today) return false;
+  const slot = TIME_SLOTS.find(s => s.id === b.slotId);
+  if (!slot) return false;
+  const cur = now.getHours() + now.getMinutes() / 60;
+  return cur >= slot.endHour;
+}
 
 /* 演示用种子预约：给看板预置几条真实数据（仅首次初始化时写入） */
 function seedBookings() {
