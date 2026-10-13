@@ -1,7 +1,7 @@
 # Gitee 完工报告 issue 文案（第 7–10 天）
 
-> 现状（2026-10-13 核查）：仓库已有 4 条 issue —— 第 4/5/6 天完工报告 + 交叉验收整改清单；
-> **第 7、8、9、10 天共 4 条待补发**（就是本文件下面四段）。
+> 现状（2026-10-13 核查）：仓库已有 7 条 issue —— 第 4/5/6 天完工 + 交叉验收整改清单 + **本次补发的第 7/8/9 天**；
+> **仅剩第 10 天待补**（受 Gitee 每日发布上限所限，10-14 补发；文案就是本文件最后一段）。
 > commit 链接格式：<https://gitee.com/huanz-007/project1/commit/><hash>
 
 ## 链接速查（点开即用）
@@ -9,9 +9,9 @@
 | 用途 | 链接 |
 | --- | --- |
 | 登录 | <https://gitee.com/login> |
-| **新建 issue**（发第 7–10 天报告） | <https://gitee.com/huanz-007/project1/issues/new> |
+| **新建 issue** | <https://gitee.com/huanz-007/project1/issues/new> |
 | issue 列表（核对是否已发出） | <https://gitee.com/huanz-007/project1/issues> |
-| **确认老师是仓库开发者**（最高优先级） | <https://gitee.com/huanz-007/project1/settings> → 左侧「仓库成员管理」 |
+| **确认老师是仓库开发者**（已核验通过 ✅） | <https://gitee.com/huanz-007/project1/settings> → 左侧「仓库成员管理」 |
 | 生成私人令牌（可让 AI 代发 issue） | <https://gitee.com/profile/personal_access_tokens> |
 | SSH 公钥（已配好，无需再动） | <https://gitee.com/profile/sshkeys> |
 
@@ -20,12 +20,17 @@
 
 ## 两种用法
 
-**用法 A（最快，AI 代发）**：在私人令牌页生成一个令牌，**必须同时勾选 `projects`（仓库）和 `issues` 两项的「读写」**
-（实测：只勾 `issues` 时，所有仓库写接口都会返回 `404 Not Found Project` —— 那是 Gitee 权限不足的掩码报错，
-不是仓库路径写错了）。把令牌发给我，我用 API 一次性建好 4 条 issue。
-（令牌可在用完后立即在同一个页面删除。）
+**用法 A（AI 代发，已实测可用）**：生成私人令牌（勾 `issues` 读写；`projects` 一并勾上无副作用），
+交给 AI 后运行 `doubao-audit/create_issues.py`（令牌走环境变量 `GT`，不落盘）即可批量建 issue。
 
-**用法 B（手动，2 分钟）**：打开「新建 issue」链接，标题用下面的「标题」，正文整段复制 → 提交，重复 4 次。
+> **接口踩坑（重要）**：Gitee v5 **创建 Issue 的路径是扁平的 `POST /api/v5/repos/{owner}/issues`，不带 `{repo}` 段**，
+> 仓库名作为表单参数 `repo` 传递；`/repos/{owner}/{repo}/issues` **只支持 GET**，往里 POST 会返回
+> `404 {"message":"Not Found Project"}` —— 这个报错看起来像"仓库不存在/权限不足"，实际是**路由不匹配**，
+> 排查时极易被带偏（本项目就为此误判过一次 scope 问题）。
+> **每日上限**：同一账号在同一仓库**每天最多建 3 条 issue**，超出返回
+> `{"今天发布的 Issue 已到达上限，请明天再试":[""]}`。
+
+**用法 B（手动，2 分钟）**：打开「新建 issue」链接，标题用下面的「标题」，正文整段复制 → 提交。
 
 > 每条都按课程要求三段：今天做了什么 / 最大卡点 / 关键 commit 链接。
 
