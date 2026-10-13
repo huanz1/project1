@@ -23,3 +23,8 @@ jobs:
 
       - name: Run business-rule tests
         run: node --test
+
+      # 实验五 T2：把交作业自查.py 改进成 CI 版挂进流水线——
+      # 此后每次 push 自动校验「反思件 + 署名 commit + 封卷 tag」，漏交直接红灯
+      - name: Compliance gate (course self-check, CI version)
+        run: python3 交作业自查.py
