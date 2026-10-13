@@ -170,6 +170,9 @@ async function handleApi(req, res, url) {
   if (req.method === 'POST' && url.pathname === '/api/ai/weekly-report') {
     let body;
     try { body = await readBody(req); } catch (e) { return sendJSON(res, 400, { ok: false, code: 'BAD_REQUEST', message: '请求体不是合法 JSON' }); }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return sendJSON(res, 400, { ok: false, code: 'BAD_REQUEST', message: '请求体需为 JSON 对象' });
+    }
     if (!body.summary || typeof body.summary !== 'object') {
       return sendJSON(res, 400, { ok: false, code: 'BAD_REQUEST', message: '缺少 summary 汇总数据' });
     }
@@ -185,6 +188,9 @@ async function handleApi(req, res, url) {
   if (req.method === 'POST' && url.pathname === '/api/ai/query') {
     let body;
     try { body = await readBody(req); } catch (e) { return sendJSON(res, 400, { ok: false, code: 'BAD_REQUEST', message: '请求体不是合法 JSON' }); }
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
+      return sendJSON(res, 400, { ok: false, code: 'BAD_REQUEST', message: '请求体需为 JSON 对象' });
+    }
     if (typeof body.question !== 'string' || !body.question.trim() || body.question.length > 500) {
       return sendJSON(res, 400, { ok: false, code: 'BAD_REQUEST', message: 'question 需为 1-500 字的字符串' });
     }
@@ -227,6 +233,7 @@ const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (url.pathname.startsWith('/api/')) {
     handleApi(req, res, url).catch((e) => {
+      console.error('[leq] 500 SERVER_ERROR:', e && e.stack ? e.stack : e); // 500 必须留服务端日志，否则无栈可查
       if (!res.headersSent) sendJSON(res, 500, { ok: false, code: 'SERVER_ERROR', message: '服务内部错误' });
     });
   } else {
