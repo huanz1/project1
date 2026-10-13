@@ -1,0 +1,24 @@
+<Slide style={{ width: 1280, height: 720, position: 'relative', background: '#0E3F8C', overflow: 'hidden' }}>
+    <Image src="assets/shot-booking.png" style={{ position: 'absolute', top: 0, left: 0, width: 1280, height: 720, objectFit: 'cover', opacity: 0.32 }} />
+    <Box style={{ position: 'absolute', top: 0, left: 0, width: 1280, height: 720, background: 'linear-gradient(115deg, rgba(14,63,140,0.94) 0%, rgba(14,63,140,0.72) 52%, rgba(30,79,168,0.42) 100%)' }} />
+    <Box style={{ position: 'absolute', left: 64, top: 132, width: 820, flexDirection: 'column', gap: 22 }}>
+        <Box style={{ flexDirection: 'row', gap: 14, alignItems: 'center' }}>
+            <Box style={{ background: '#FFC107', borderRadius: 4, padding: '5px 14px' }}>
+                <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1A2230' }}>题库第 5 题 · 个人项目</Text>
+            </Box>
+            <Text style={{ fontSize: 16, color: '#C9D8F0', letterSpacing: 2 }}>Vibe Coding 集中实践 · 结课路演</Text>
+        </Box>
+        <Text style={{ fontSize: 68, fontWeight: 'bold', color: '#FFFFFF', lineHeight: 1.15 }}>实验室设备预约系统</Text>
+        <Text style={{ fontSize: 22, color: '#AFC8EC', letterSpacing: 5 }}>LAB EQUIPMENT RESERVATION SYSTEM</Text>
+        <Box style={{ width: 84, height: 6, background: '#FFC107' }} />
+        <Text style={{ fontSize: 30, fontWeight: 'bold', color: '#FFFFFF' }}>把设备冲突，消灭在提交之前</Text>
+        <Text style={{ fontSize: 22, color: '#D8E3F5', lineHeight: 1.6 }}>
+            同一设备 · 同一天 · 同一时段，只接受一条有效预约——<br />
+            这条规则不只写在界面上，也写进了 10 条业务测试里。
+        </Text>
+    </Box>
+    <Box style={{ position: 'absolute', left: 64, bottom: 46, width: 1152, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={{ fontSize: 18, color: '#E8EFF8' }}>吴辰枫 · 2026 年 10 月</Text>
+        <Text style={{ fontSize: 18, color: '#E8EFF8' }}>线上已上线 · huanz1.github.io/project1</Text>
+    </Box>
+</Slide>

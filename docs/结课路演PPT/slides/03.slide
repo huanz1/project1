@@ -1,0 +1,37 @@
+<Slide style={{ width: 1280, height: 720, position: 'relative', background: '#FFFFFF', overflow: 'hidden' }}>
+    <Box style={{ position: 'absolute', top: 0, left: 0, width: 1280, height: 80, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px' }}>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>方案 · 一个判定式，两处兜底</Text>
+        <Text style={{ fontSize: 14, color: '#C9D8F0' }}>实验室设备预约系统 · 吴辰枫</Text>
+    </Box>
+    <Box style={{ position: 'absolute', top: 100, left: 40, width: 1200, flexDirection: 'column', gap: 16 }}>
+        <Box style={{ background: '#0E3F8C', borderRadius: 8, padding: '16px 24px', flexDirection: 'column', gap: 8 }}>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFFFFF' }}>conflict(设备, 日期, 时段) ≡ 该设备该日该时段已存在有效预约 → 拒绝</Text>
+            <Text style={{ fontSize: 22, color: '#C9D8F0', lineHeight: 1.5 }}>双保险：<span style={{ fontWeight: 'bold', color: '#FFC107' }}>① 界面禁用</span>已占时段，从源头防误点；<span style={{ fontWeight: 'bold', color: '#FFC107' }}>② 数据层二次拦截</span>，绕过界面直接提交同样被拒——规则不信任前端。</Text>
+        </Box>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 10, background: '#F0F5FC', borderRadius: 8, padding: '12px 18px' }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#0E3F8C' }}>现场动线</Text>
+            {['预约', '冲突拒绝', '占用总览', '改期/取消', '数据看板', 'AI 助手'].map((s, i, arr) => (
+                <Box key={i} style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Box style={{ background: '#FFFFFF', border: '2px solid #1E4FA8', borderRadius: 18, padding: '6px 16px' }}>
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#1E4FA8' }}>{s}</Text>
+                    </Box>
+                    {i < arr.length - 1 && <Text style={{ fontSize: 18, color: '#3D7BD9' }}>→</Text>}
+                </Box>
+            ))}
+        </Box>
+        <Box style={{ flexDirection: 'row', gap: 20, height: 292 }}>
+            <Box style={{ width: 660, flexDirection: 'column', gap: 8 }}>
+                <Image src="assets/shot-overview.png" style={{ width: 660, height: 252, objectFit: 'cover', borderRadius: 8, border: '1px solid #D6DCE5' }} />
+                <Text style={{ fontSize: 16, color: '#4A5568' }}>占用总览：6×5 矩阵，绿格即被占用并显示预约人——占用第一次"看得见"（真实界面）</Text>
+            </Box>
+            <Box style={{ flex: 1, flexDirection: 'column', gap: 8 }}>
+                <Image src="assets/shot-booking.png" style={{ width: 520, height: 252, objectFit: 'cover', borderRadius: 8, border: '1px solid #D6DCE5' }} />
+                <Text style={{ fontSize: 16, color: '#4A5568' }}>设备台账：忙闲徽标 + 一键预约（真实界面）</Text>
+            </Box>
+        </Box>
+    </Box>
+    <Box style={{ position: 'absolute', top: 668, left: 40, width: 1200, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>Vibe Coding 集中实践 · 实验室设备预约系统</Text>
+        <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#1E4FA8' }}>03 / 06</Text>
+    </Box>
+</Slide>
