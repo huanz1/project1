@@ -50,6 +50,12 @@ function isBookingExpired(b, now = new Date()) {
   return cur >= slot.endHour;
 }
 
+/* 判断预约是否“今日将到期”：日期就是今天、且时段尚未结束。
+   用于「我的预约」里的到期提醒提前标记（题库要求：到期提醒先做页面标记）。 */
+function isDueToday(b, now = new Date()) {
+  return b.date === localDateStr(now) && !isBookingExpired(b, now);
+}
+
 /* 演示用种子预约：给看板预置几条真实数据（仅首次初始化时写入） */
 function seedBookings() {
   const today = new Date();

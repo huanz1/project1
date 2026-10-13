@@ -18,6 +18,7 @@ function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + name));
   if (name === 'dashboard') renderDashboard();
+  if (name === 'ai') renderAIPage();
 }
 
 /* ---------- 设备卡片 ---------- */
@@ -123,12 +124,18 @@ function queryMine() {
   if (!list.length) { wrap.innerHTML = '<div class="empty">未查询到该学号的预约记录</div>'; return; }
   wrap.innerHTML = list.map(b => {
     const expired = isBookingExpired(b);
+    const dueToday = isDueToday(b);
     const canCancel = b.status === 'active' && !expired;
+    /* 状态分三档提示：已取消 / 已过期 / 今日到期（提前提醒）/ 有效 */
+    const state = b.status !== 'active' ? { label: '已取消', cls: 'cancel' }
+      : expired ? { label: '已过期', cls: 'expired' }
+      : dueToday ? { label: '今日到期', cls: 'warn' }
+      : { label: '有效', cls: 'ok' };
     return `
       <div class="booking-item">
         <div class="bi-main">
-          <span class="bi-title">${escapeHtml(b.equipName)} <span class="badge ${b.status === 'active' ? 'ok' : 'cancel'}">${b.status === 'active' ? (expired ? '已过期' : '有效') : '已取消'}</span></span>
-          <span class="bi-sub">📅 ${b.date}　🕐 ${b.slotLabel}</span>
+          <span class="bi-title">${escapeHtml(b.equipName)} <span class="badge ${state.cls}">${state.label}</span></span>
+          <span class="bi-sub">📅 ${b.date}　🕐 ${b.slotLabel}${dueToday && b.status === 'active' ? '　⏰ 今天这个时段结束后即失效，请按时使用' : ''}</span>
           <span class="bi-sub">用途：${escapeHtml(b.purpose)}</span>
         </div>
         ${canCancel ? `<button class="btn btn-danger btn-sm" data-id="${b.id}">取消预约</button>` : ''}
@@ -232,6 +239,114 @@ function exportCSV() {
   toast('已导出 ' + rows.length + ' 条记录', 'success');
 }
 
+/* ---------- AI 助手（第 7 天接入） ---------- */
+
+/* 组装给 LLM 的数据上下文：设备清单 + 全部有效预约（前端算好，AI 只做表达与推理） */
+function buildAIContext() {
+  const active = Store.getBookings().filter(b => b.status === 'active');
+  return {
+    今天: todayStr(),
+    设备列表: Store.getEquipment().map(e => ({ 名称: e.name, 位置: e.location, 参数: e.desc })),
+    有效预约: active.map(b => ({ 设备: b.equipName, 日期: b.date, 时段: b.slotLabel, 预约人: b.name })),
+  };
+}
+
+/* 周报用的汇总数据（计数 + 明细，控制 token 规模） */
+function buildWeeklySummary() {
+  const { active, byEquipment, bySlot } = Store.getBookingSummary();
+  return {
+    统计日期: todayStr(),
+    设备总数: Store.getEquipment().length,
+    有效预约总数: active.length,
+    各设备预约数: Store.getEquipment().map(e => ({ 设备: e.name, 预约数: byEquipment[e.id] || 0 })),
+    各时段预约数: TIME_SLOTS.map(s => ({ 时段: s.label, 预约数: bySlot[s.id] || 0 })),
+    有效预约明细: active.map(b => ({ 设备: b.equipName, 日期: b.date, 时段: b.slotLabel })),
+  };
+}
+
+function renderAIPage() {
+  renderAIStatus();
+  renderAIUsage();
+}
+
+/* AI 服务状态检测：静态托管（GitHub Pages）下明确告知“不可用及原因”，不报错不崩溃 */
+async function renderAIStatus() {
+  const dot = document.querySelector('#aiStatus .ai-dot');
+  const text = document.getElementById('aiStatusText');
+  dot.className = 'ai-dot loading';
+  text.textContent = '正在检测 AI 服务状态…';
+  const h = await AI.health();
+  if (h.ok && h.configured) {
+    dot.className = 'ai-dot ok';
+    text.textContent = 'AI 服务已连接' + (h.model ? '（模型：' + h.model + '）' : '') + '，周报与问答可用。';
+  } else if (h.ok && !h.configured) {
+    dot.className = 'ai-dot bad';
+    text.textContent = 'AI 代理在线，但服务端未配置 AI_API_KEY，AI 功能暂不可用。';
+  } else {
+    dot.className = 'ai-dot bad';
+    text.textContent = '未检测到 AI 代理服务：纯静态托管模式下 AI 不可用；本地或服务器运行 node server/server.js 后即可使用（详见 docs/部署手册.md）。';
+  }
+}
+
+/* 统一的 AI 结果显示：成功渲染文本，失败渲染兜底文案（含原因码） */
+function showAIResult(domId, r) {
+  const box = document.getElementById(domId);
+  AI.recordCall(r);
+  renderAIUsage();
+  if (r.ok) {
+    box.className = 'ai-result show';
+    box.textContent = r.text || '（AI 未返回内容）';
+  } else {
+    box.className = 'ai-result show error';
+    box.textContent = '⚠ ' + AI.fallbackText(r.code) + (r.message ? '（' + r.message + '）' : '');
+  }
+}
+
+/* 点位①：生成台账周报 */
+async function generateWeeklyReport() {
+  const btn = document.getElementById('btnWeeklyReport');
+  const box = document.getElementById('weeklyReportResult');
+  btn.disabled = true;
+  box.className = 'ai-result show loading';
+  box.textContent = 'AI 正在生成本周台账周报，请稍候（通常 5–20 秒）…';
+  try {
+    const r = await AI.weeklyReport(buildWeeklySummary());
+    showAIResult('weeklyReportResult', r);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* 点位②：自然语言查询 */
+async function askAI() {
+  const input = document.getElementById('aiQuestion');
+  const q = input.value.trim();
+  if (!q) return toast('请先输入问题', 'error');
+  const btn = document.getElementById('btnAiAsk');
+  const box = document.getElementById('aiAnswerResult');
+  btn.disabled = true;
+  box.className = 'ai-result show loading';
+  box.textContent = 'AI 正在思考，请稍候…';
+  try {
+    const r = await AI.ask(q, buildAIContext());
+    showAIResult('aiAnswerResult', r);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+/* C1 挑战：用量统计（调用量 / 成功失败 / token / 估算成本） */
+function renderAIUsage() {
+  const u = AI.getUsage();
+  document.getElementById('aiUsageGrid').innerHTML = [
+    { num: u.calls, label: '累计调用（次）' },
+    { num: u.okCalls, label: '成功（次）' },
+    { num: u.failCalls, label: '失败（次）' },
+    { num: u.tokensIn + u.tokensOut, label: '累计 token' },
+    { num: '¥ ' + u.estCost.toFixed(4), label: '估算成本（元）' },
+  ].map(s => `<div class="stat-card"><div class="num">${s.num}</div><div class="label">${s.label}</div></div>`).join('');
+}
+
 /* ---------- 初始化 ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   Store.init();
@@ -248,4 +363,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnQueryMine').addEventListener('click', queryMine);
   document.getElementById('mineSid').addEventListener('keydown', e => { if (e.key === 'Enter') queryMine(); });
   document.getElementById('btnExport').addEventListener('click', exportCSV);
+  /* AI 助手（第 7 天） */
+  document.getElementById('btnWeeklyReport').addEventListener('click', generateWeeklyReport);
+  document.getElementById('btnAiAsk').addEventListener('click', askAI);
+  document.getElementById('aiQuestion').addEventListener('keydown', e => { if (e.key === 'Enter') askAI(); });
+  document.querySelectorAll('.ai-chip').forEach(c =>
+    c.addEventListener('click', () => {
+      document.getElementById('aiQuestion').value = c.dataset.q;
+      askAI();
+    }));
 });

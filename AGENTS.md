@@ -6,8 +6,9 @@
 ## 技术栈（不要擅自更换）
 - 原生 HTML5 + CSS3 + JavaScript（ES6+），不引入前端框架、不使用构建工具
 - 数据持久化只用浏览器 `localStorage`，不接后端、不引数据库
+- **唯一例外（第 7 天 AI 能力集成）**：允许 `server/server.js` 一个零依赖 Node 脚本作为 AI 代理（静态托管 + LLM 请求转发）；API Key 只存在于该服务端的环境变量，严禁出现在前端代码/仓库/提交里；不得因此引入任何 npm 依赖、框架或数据库
 - 图表统一使用 Apache ECharts 5（本地 `vendor/echarts.min.js`），不混用其他图表库
-- 代码分三层：`data.js`（种子数据）、`storage.js`（数据访问）、`app.js`（交互与渲染）
+- 代码分三层：`data.js`（种子数据）、`storage.js`（数据访问）、`app.js`（交互与渲染）；AI 调用单独放 `js/ai.js`（前端模块）+ `server/server.js`（服务端代理）
 
 ## 目录与风格约定
 - 页面统一使用 `index.html` 单页 + Tab 切换；新增区块先加 Tab 再写内容

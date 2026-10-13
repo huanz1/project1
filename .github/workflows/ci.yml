@@ -18,5 +18,8 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Syntax-check AI proxy server
+        run: node --check server/server.js
+
       - name: Run business-rule tests
         run: node --test

@@ -20,6 +20,7 @@
       <button class="tab active" data-tab="booking">设备预约</button>
       <button class="tab" data-tab="mine">我的预约</button>
       <button class="tab" data-tab="dashboard">数据看板</button>
+      <button class="tab" data-tab="ai">AI 助手</button>
       <button class="tab" data-tab="help">使用说明</button>
     </nav>
   </div>
@@ -74,6 +75,45 @@
     </div>
   </section>
 
+  <!-- AI 助手 -->
+  <section id="page-ai" class="page">
+    <div class="page-head">
+      <h2>AI 助手</h2>
+      <p class="muted">基于大模型的台账周报生成与自然语言查询，密钥只在服务端，前端不接触。</p>
+    </div>
+    <div class="ai-status" id="aiStatus"><span class="ai-dot loading"></span><span id="aiStatusText">正在检测 AI 服务状态…</span></div>
+
+    <div class="ai-grid">
+      <div class="ai-card">
+        <h3>📊 台账周报生成</h3>
+        <p class="muted">把当前预约台账交给大模型，生成利用率观察周报（哪台设备抢手、哪台闲置、时段怎么分布、管理建议）。</p>
+        <button class="btn btn-primary" id="btnWeeklyReport">生成本周台账周报</button>
+        <div class="ai-result" id="weeklyReportResult"></div>
+      </div>
+
+      <div class="ai-card">
+        <h3>💬 自然语言查询</h3>
+        <p class="muted">用大白话问设备使用情况，例如「明天下午有空闲的投影仪吗」。AI 只依据系统内的真实预约数据作答。</p>
+        <div class="ai-ask-row">
+          <input type="text" id="aiQuestion" placeholder="输入你的问题，如：明天下午有空闲的投影仪吗" maxlength="200">
+          <button class="btn btn-primary" id="btnAiAsk">提问</button>
+        </div>
+        <div class="ai-examples">
+          <span class="muted">试试：</span>
+          <button class="ai-chip" data-q="明天下午有空闲的投影仪吗">明天下午有空闲的投影仪吗</button>
+          <button class="ai-chip" data-q="这周哪台设备约得最多？">这周哪台设备约得最多？</button>
+          <button class="ai-chip" data-q="周四上午 3D 打印机还能约吗？">周四上午 3D 打印机还能约吗？</button>
+        </div>
+        <div class="ai-result" id="aiAnswerResult"></div>
+      </div>
+    </div>
+
+    <div class="ai-usage">
+      <h3>AI 用量统计 <span class="muted">（本机浏览器累计，供成本对账）</span></h3>
+      <div class="stat-grid" id="aiUsageGrid"></div>
+    </div>
+  </section>
+
   <!-- 使用说明 -->
   <section id="page-help" class="page">
     <div class="page-head"><h2>使用说明</h2></div>
@@ -87,6 +127,12 @@
       </ol>
       <h3>数据说明</h3>
       <p class="muted">本站为纯前端静态应用，预约与访问数据保存在浏览器 localStorage 中；数据看板由 ECharts 渲染，支持导出 CSV 存档。</p>
+      <h3>AI 功能说明</h3>
+      <ol>
+        <li>「AI 助手」页的台账周报与自然语言查询由大模型生成，API 密钥只保存在服务端环境变量，前端不接触。</li>
+        <li>AI 能力需要 AI 代理服务在线：在仓库根目录执行 <code>AI_API_KEY=你的Key node server/server.js</code>（默认端口 3000），或访问已部署该服务的地址；纯静态托管（GitHub Pages）下 AI 功能不可用，页面会给出明确提示，其余功能不受影响。</li>
+        <li>配置方法（平台选一个：火山引擎方舟 / 阿里云百炼 / 硅基流动，均兼容 OpenAI 协议）与成本估算见 <code>docs/技术方案.md</code> 与 <code>docs/部署手册.md</code>。</li>
+      </ol>
     </div>
   </section>
 </main>
@@ -141,6 +187,7 @@
 <script src="vendor/echarts.min.js"></script>
 <script src="js/data.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/ai.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

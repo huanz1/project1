@@ -23,7 +23,7 @@ function loadStore() {
     fs.readFileSync(path.join(jsDir, 'storage.js'), 'utf8') + '\n' +
     'this.Store = Store; this.isBookingExpired = isBookingExpired;';
   vm.runInContext(bundle, ctx);
-  return { Store: ctx.Store, isBookingExpired: ctx.isBookingExpired, localStorage };
+  return { Store: ctx.Store, isBookingExpired: ctx.isBookingExpired, isDueToday: ctx.isDueToday, localStorage };
 }
 
 /* R1：首次初始化写入种子数据（6 台设备、6 条预约、统计初始） */
@@ -109,4 +109,33 @@ test('R6 当天预约按时段结束判定到期，不只是看日期', () => {
   // 明天未到期、昨天已到期
   assert.strictEqual(isBookingExpired(mk('2026-10-14', 's1'), at(23)), false);
   assert.strictEqual(isBookingExpired(mk('2026-10-12', 's1'), at(8)), true);
+});
+
+/* R7：今日到期提醒标记（题库要求"到期提醒先做页面标记"）：
+   当天的预约且时段未结束 → 今日到期；当天但时段已过 → 已过期（不算今日到期）；
+   未来/过去日期 → 都不是今日到期 */
+test('R7 今日到期判定：仅当天且时段未结束的预约为今日到期', () => {
+  const { isDueToday } = loadStore();
+  const mk = (date, slotId) => ({ date, slotId });
+  const at = (h, m = 0) => new Date(2026, 9, 13, h, m); // 基准 2026-10-13
+  assert.strictEqual(isDueToday(mk('2026-10-13', 's3'), at(9)), true);   // 今天 14-16 点档，早上看 → 今日到期
+  assert.strictEqual(isDueToday(mk('2026-10-13', 's1'), at(11)), false); // 今天 8-10 点档，已过 → 不算
+  assert.strictEqual(isDueToday(mk('2026-10-14', 's1'), at(9)), false);  // 明天
+  assert.strictEqual(isDueToday(mk('2026-10-12', 's1'), at(9)), false);  // 昨天
+});
+
+/* R8：AI 用量统计累加（C1 挑战）——成功/失败分别计数，token 累加，读取有兜底 */
+test('R8 AI 用量统计按次累加，初始有兜底值', () => {
+  const { Store } = loadStore();
+  // 未初始化时也有默认结构（不崩溃）
+  assert.deepStrictEqual(Store.getAIStats(), { calls: 0, okCalls: 0, failCalls: 0, tokensIn: 0, tokensOut: 0 });
+  Store.recordAICall({ ok: true, tokensIn: 800, tokensOut: 300 });
+  Store.recordAICall({ ok: false, tokensIn: 120, tokensOut: 0 });
+  Store.recordAICall({ ok: true, tokensIn: 50, tokensOut: 60 });
+  const s = Store.getAIStats();
+  assert.strictEqual(s.calls, 3);
+  assert.strictEqual(s.okCalls, 2);
+  assert.strictEqual(s.failCalls, 1);
+  assert.strictEqual(s.tokensIn, 970);
+  assert.strictEqual(s.tokensOut, 360);
 });

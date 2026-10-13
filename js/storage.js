@@ -2,6 +2,7 @@
 const K_EQUIP = 'leq_equipment';
 const K_BOOK = 'leq_bookings';
 const K_STATS = 'leq_stats';
+const K_AI = 'leq_ai_stats';
 
 const Store = {
   /* 首次访问初始化种子数据 */
@@ -85,6 +86,25 @@ const Store = {
   _getStats() {
     return JSON.parse(localStorage.getItem(K_STATS) ||
       '{"pvTotal":0,"pvDaily":{},"formSubmits":0}');
+  },
+
+  /* AI 用量统计（C1 挑战：调用量 / token / 成本累计）。读取兜底同 _getStats */
+  _getAIStats() {
+    return JSON.parse(localStorage.getItem(K_AI) ||
+      '{"calls":0,"okCalls":0,"failCalls":0,"tokensIn":0,"tokensOut":0}');
+  },
+
+  recordAICall(rec) {
+    const s = this._getAIStats();
+    s.calls += 1;
+    if (rec && rec.ok) s.okCalls += 1; else s.failCalls += 1;
+    s.tokensIn += (rec && rec.tokensIn) || 0;
+    s.tokensOut += (rec && rec.tokensOut) || 0;
+    localStorage.setItem(K_AI, JSON.stringify(s));
+  },
+
+  getAIStats() {
+    return this._getAIStats();
   },
 
   /* 访问统计 */
