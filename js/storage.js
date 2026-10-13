@@ -82,6 +82,40 @@ const Store = {
     return b;
   },
 
+  /* 改期（第 8 天 P0）：把未到期预约换到新日期/时段。
+     规则：仅 active 且未到期可改；不得早于今天；新时段不得与该设备其他 active 预约冲突（排除自身）；
+     成功后旧时段自动释放（记录被覆盖，无需两步）。返回 { ok, booking } 或 { ok:false, reason } */
+  rescheduleBooking(id, date, slotId) {
+    const list = this.getBookings();
+    const b = list.find(x => x.id === id);
+    if (!b) return { ok: false, reason: 'NOT_FOUND' };
+    if (b.status !== 'active') return { ok: false, reason: 'NOT_ACTIVE' };
+    if (isBookingExpired(b)) return { ok: false, reason: 'EXPIRED' };
+    if (date < localDateStr()) return { ok: false, reason: 'PAST_DATE' };
+    if (this.hasConflict(b.equipId, date, slotId, b.id)) return { ok: false, reason: 'CONFLICT' };
+    b.date = date;
+    b.slotId = slotId;
+    const slot = TIME_SLOTS.find(s => s.id === slotId);
+    if (slot) b.slotLabel = slot.label;
+    this.saveBookings(list);
+    return { ok: true, booking: b };
+  },
+
+  /* 某日占用总览（第 8 天 P0）：{ equipId: { slotId: booking|null } }，占用总览页复用 */
+  getDayOverview(date) {
+    const overview = {};
+    this.getEquipment().forEach(e => {
+      overview[e.id] = {};
+      TIME_SLOTS.forEach(s => { overview[e.id][s.id] = null; });
+    });
+    this.getBookings().forEach(b => {
+      if (b.status === 'active' && b.date === date && overview[b.equipId]) {
+        overview[b.equipId][b.slotId] = b;
+      }
+    });
+    return overview;
+  },
+
   /* 统计读取兜底（K_STATS 缺失时返回默认结构，避免 null 崩溃） */
   _getStats() {
     return JSON.parse(localStorage.getItem(K_STATS) ||

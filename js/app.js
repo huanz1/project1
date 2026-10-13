@@ -1,6 +1,7 @@
 /* 应用主逻辑 */
 let currentEquip = null;
 let selectedSlot = null;
+let rsSelectedSlot = null; /* 改期模态框当前选中时段 */
 const charts = {};
 const todayStr = () => localDateStr();
 
@@ -18,6 +19,7 @@ function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === 'page-' + name));
   if (name === 'dashboard') renderDashboard();
+  if (name === 'overview') renderOverview();
   if (name === 'ai') renderAIPage();
 }
 
@@ -138,15 +140,112 @@ function queryMine() {
           <span class="bi-sub">📅 ${b.date}　🕐 ${b.slotLabel}${dueToday && b.status === 'active' ? '　⏰ 今天这个时段结束后即失效，请按时使用' : ''}</span>
           <span class="bi-sub">用途：${escapeHtml(b.purpose)}</span>
         </div>
-        ${canCancel ? `<button class="btn btn-danger btn-sm" data-id="${b.id}">取消预约</button>` : ''}
+        ${canCancel ? `<div class="bi-actions">
+          <button class="btn btn-ghost btn-sm" data-reschedule="${b.id}">改期</button>
+          <button class="btn btn-danger btn-sm" data-id="${b.id}">取消预约</button>
+        </div>` : ''}
       </div>`;
   }).join('');
-  wrap.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
+  wrap.querySelectorAll('button[data-id]').forEach(btn => btn.addEventListener('click', () => {
     Store.cancelBooking(btn.dataset.id);
     renderEquipment();
     queryMine();
     toast('预约已取消', 'success');
   }));
+  wrap.querySelectorAll('button[data-reschedule]').forEach(btn =>
+    btn.addEventListener('click', () => openRescheduleModal(btn.dataset.reschedule)));
+}
+
+/* ---------- 改期（第 8 天：未到期预约换日期/时段） ---------- */
+function openRescheduleModal(id) {
+  const booking = Store.getBookings().find(b => b.id === id);
+  if (!booking) return;
+  document.getElementById('rescheduleTitle').textContent = '修改预约：' + booking.equipName;
+  document.getElementById('rfBookingId').value = id;
+  document.getElementById('rfDate').value = booking.date;
+  document.getElementById('rfDate').min = todayStr();
+  document.getElementById('rfMsg').textContent = '';
+  renderRescheduleSlots();
+  document.getElementById('rescheduleMask').classList.add('show');
+}
+
+function closeRescheduleModal() {
+  document.getElementById('rescheduleMask').classList.remove('show');
+}
+
+/* 改期时段渲染：被其他 active 预约占用的禁用；本条预约当前时段标“（当前）”且可再选 */
+function renderRescheduleSlots() {
+  rsSelectedSlot = null;
+  const date = document.getElementById('rfDate').value;
+  const booking = Store.getBookings().find(b => b.id === document.getElementById('rfBookingId').value);
+  const wrap = document.getElementById('rfSlotGroup');
+  const occupied = new Set();
+  if (date && booking) {
+    Store.getBookings().forEach(b => {
+      if (b.status === 'active' && b.equipId === booking.equipId && b.date === date && b.id !== booking.id) {
+        occupied.add(b.slotId);
+      }
+    });
+  }
+  wrap.innerHTML = TIME_SLOTS.map(s => {
+    const isCurrent = !!booking && booking.date === date && booking.slotId === s.id;
+    const disabled = occupied.has(s.id);
+    return `<button type="button" class="slot-btn ${disabled ? 'disabled' : ''} ${isCurrent ? 'current' : ''}" data-slot="${s.id}" ${disabled ? 'disabled' : ''}>${s.label}${isCurrent ? '（当前）' : ''}</button>`;
+  }).join('');
+  wrap.querySelectorAll('.slot-btn').forEach(b => b.addEventListener('click', () => {
+    if (b.classList.contains('disabled')) return;
+    rsSelectedSlot = b.dataset.slot;
+    wrap.querySelectorAll('.slot-btn').forEach(x => x.classList.toggle('selected', x === b));
+  }));
+}
+
+function submitReschedule(e) {
+  e.preventDefault();
+  const msg = document.getElementById('rfMsg');
+  const id = document.getElementById('rfBookingId').value;
+  const date = document.getElementById('rfDate').value;
+  if (!date) return msg.textContent = '请选择预约日期';
+  if (!rsSelectedSlot) return msg.textContent = '请选择预约时段';
+  const r = Store.rescheduleBooking(id, date, rsSelectedSlot);
+  if (!r.ok) {
+    const text = {
+      CONFLICT: '该时段已被预约，请更换日期或时段',
+      EXPIRED: '预约已过期，不能修改',
+      NOT_ACTIVE: '仅有效预约可以修改',
+      PAST_DATE: '预约日期不能早于今天',
+      NOT_FOUND: '预约不存在或已变动，请刷新后重试',
+    }[r.reason] || '修改失败，请稍后重试';
+    msg.textContent = text;
+    renderRescheduleSlots();
+    return;
+  }
+  closeRescheduleModal();
+  renderEquipment();
+  queryMine();
+  toast('已改为 ' + r.booking.date + ' ' + r.booking.slotLabel, 'success');
+}
+
+/* ---------- 占用总览（第 8 天：按日期看全部设备 × 时段） ---------- */
+function renderOverview() {
+  const dateInput = document.getElementById('overviewDate');
+  if (!dateInput.value) dateInput.value = todayStr();
+  dateInput.min = todayStr();
+  const date = dateInput.value;
+  const overview = Store.getDayOverview(date);
+  let html = '<table class="overview-table"><thead><tr><th class="ov-equip">设备</th>'
+    + TIME_SLOTS.map(s => `<th>${s.label}</th>`).join('') + '</tr></thead><tbody>';
+  Store.getEquipment().forEach(e => {
+    html += `<tr><td class="ov-equip"><span class="eq-icon">${e.icon}</span> ${escapeHtml(e.name)}</td>`;
+    TIME_SLOTS.forEach(s => {
+      const b = overview[e.id][s.id];
+      html += b
+        ? `<td class="ov-busy" title="${escapeHtml(b.name)} · ${escapeHtml(b.purpose)}">${escapeHtml(b.name)}</td>`
+        : '<td class="ov-free">可约</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  document.getElementById('overviewWrap').innerHTML = html;
 }
 
 /* ---------- 数据看板 ---------- */
@@ -363,6 +462,13 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btnQueryMine').addEventListener('click', queryMine);
   document.getElementById('mineSid').addEventListener('keydown', e => { if (e.key === 'Enter') queryMine(); });
   document.getElementById('btnExport').addEventListener('click', exportCSV);
+  /* 占用总览与改期（第 8 天） */
+  document.getElementById('overviewDate').addEventListener('change', renderOverview);
+  document.getElementById('rescheduleClose').addEventListener('click', closeRescheduleModal);
+  document.getElementById('rfCancel').addEventListener('click', closeRescheduleModal);
+  document.getElementById('rescheduleMask').addEventListener('click', e => { if (e.target.id === 'rescheduleMask') closeRescheduleModal(); });
+  document.getElementById('rfDate').addEventListener('change', renderRescheduleSlots);
+  document.getElementById('rescheduleForm').addEventListener('submit', submitReschedule);
   /* AI 助手（第 7 天） */
   document.getElementById('btnWeeklyReport').addEventListener('click', generateWeeklyReport);
   document.getElementById('btnAiAsk').addEventListener('click', askAI);

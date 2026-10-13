@@ -16,7 +16,8 @@
 | 设备台账 | 6 台设备卡片，展示位置、参数、当前预约状态 |
 | 在线预约 | 选择日期 + 时段，填写姓名/学号/用途（表单收集） |
 | 冲突检测 | 同一设备 + 同一天 + 同一时段只接受一条有效预约 |
-| 我的预约 | 凭学号查询，可取消未到期预约；「今日到期」提前标记 |
+| 占用总览 | 按日期查看全部设备 × 时段占用矩阵，空格即可约 |
+| 我的预约 | 凭学号查询；未到期预约可「改期」或「取消」；「今日到期」提前标记 |
 | 数据看板 | **ECharts** 渲染：各设备预约次数、时段分布、近 7 天访问量 |
 | AI 助手 | **LLM** 台账周报生成 + 自然语言查询（密钥只在服务端）+ 用量统计 |
 | 访问统计 | 累计 PV、今日 PV、表单提交次数（localStorage 计数） |
@@ -27,8 +28,32 @@
 - 纯前端：原生 HTML + CSS + JavaScript（无构建步骤，无框架依赖）
 - 数据存储：浏览器 `localStorage`
 - 外部开源组件：**[Apache ECharts 5.5.1](https://echarts.apache.org/)**（图表）
-- 部署：GitHub Pages 静态托管（0 成本、0 后端；Gitee Pages 已下线）
+- AI 能力：零依赖 Node 代理 `server/server.js`（LLM 转发，密钥只在服务端环境变量）
+- 部署：GitHub Pages 静态托管（0 成本、0 后端；Gitee Pages 已下线）；AI 功能需另行运行/部署该代理
 - 🌐 线上地址：**https://huanz1.github.io/project1/**
+
+## 架构
+
+```mermaid
+graph LR
+  subgraph 浏览器（纯前端）
+    UI["index.html 单页 + Tab 切换"]
+    APP["js/app.js 交互/渲染"]
+    STORE["js/storage.js 数据访问层"]
+    AIJS["js/ai.js AI 前端模块"]
+    LS[("localStorage<br/>设备/预约/统计/AI用量")]
+  end
+  subgraph 服务端（第 7 天，零依赖 Node ≥18）
+    SRV["server/server.js<br/>静态托管 + LLM 转发"]
+  end
+  LLM[("LLM 平台<br/>火山方舟 / 百炼 / 硅基流动")]
+  UI --> APP
+  APP --> STORE
+  STORE --> LS
+  APP --> AIJS
+  AIJS -->|"POST /api/ai/*（不含密钥）"| SRV
+  SRV -->|"Authorization: Bearer $AI_API_KEY"| LLM
+```
 
 ## 本地运行
 

@@ -18,6 +18,7 @@
     </div>
     <nav class="tabs" id="tabs">
       <button class="tab active" data-tab="booking">设备预约</button>
+      <button class="tab" data-tab="overview">占用总览</button>
       <button class="tab" data-tab="mine">我的预约</button>
       <button class="tab" data-tab="dashboard">数据看板</button>
       <button class="tab" data-tab="ai">AI 助手</button>
@@ -35,6 +36,18 @@
       <p class="muted">选择设备与时段提交预约，同一设备同一时段不可重复预约。</p>
     </div>
     <div class="equip-grid" id="equipGrid"></div>
+  </section>
+
+  <!-- 占用总览 -->
+  <section id="page-overview" class="page">
+    <div class="page-head">
+      <h2>占用总览</h2>
+      <div class="head-actions">
+        <input type="date" id="overviewDate" class="date-input">
+      </div>
+    </div>
+    <p class="muted" style="margin-bottom:14px;">选择日期，查看当天全部设备 × 时段的占用矩阵；空格可约，有名有姓说明已被占用。</p>
+    <div class="overview-wrap" id="overviewWrap"></div>
   </section>
 
   <!-- 我的预约 -->
@@ -123,7 +136,8 @@
         <li>在「设备预约」页选择设备，点击「预约」。</li>
         <li>选择日期（不可早于今天）和时段，填写姓名、学号、用途后提交。</li>
         <li>同一设备、同一天、同一时段只接受一条有效预约，冲突时会被拒绝并提示。</li>
-        <li>在「我的预约」页凭学号查询，可取消未到期的预约释放名额。</li>
+        <li>在「占用总览」页可按日期查看全部设备 × 时段的占用矩阵，空格即可约。</li>
+        <li>在「我的预约」页凭学号查询；未到期的预约可「改期」（换日期/时段，旧时段自动释放）或「取消」；今天到时段的预约会标「今日到期」提醒按时使用。</li>
       </ol>
       <h3>数据说明</h3>
       <p class="muted">本站为纯前端静态应用，预约与访问数据保存在浏览器 localStorage 中；数据看板由 ECharts 渲染，支持导出 CSV 存档。</p>
@@ -170,6 +184,32 @@
       <div class="modal-foot">
         <button type="button" class="btn btn-ghost" id="btnCancelForm">取消</button>
         <button type="submit" class="btn btn-primary">提交预约</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 改期模态框（第 8 天：未到期预约换日期/时段） -->
+<div class="modal-mask" id="rescheduleMask">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="rescheduleTitle">修改预约</h3>
+      <button class="modal-close" id="rescheduleClose">×</button>
+    </div>
+    <form id="rescheduleForm" class="modal-body">
+      <input type="hidden" id="rfBookingId">
+      <div class="form-row">
+        <label>预约日期 <span class="req">*</span></label>
+        <input type="date" id="rfDate" required>
+      </div>
+      <div class="form-row">
+        <label>选择时段 <span class="req">*</span></label>
+        <div class="slot-group" id="rfSlotGroup"></div>
+      </div>
+      <p class="form-msg" id="rfMsg"></p>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="rfCancel">取消</button>
+        <button type="submit" class="btn btn-primary">保存修改</button>
       </div>
     </form>
   </div>

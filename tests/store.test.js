@@ -1,6 +1,6 @@
 /* 核心业务规则测试（node:test）
    运行：node --test tests/
-   覆盖 5 条人工点名的业务规则（见 docs/测试策略.md）。 */
+   覆盖 10 条人工点名的业务规则（见 docs/测试策略.md）。 */
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('node:fs');
@@ -138,4 +138,75 @@ test('R8 AI 用量统计按次累加，初始有兜底值', () => {
   assert.strictEqual(s.failCalls, 1);
   assert.strictEqual(s.tokensIn, 970);
   assert.strictEqual(s.tokensOut, 360);
+});
+
+/* R9：改期规则（第 8 天 P0）——成功时旧时段释放、新时段占用；
+   与同设备其他预约冲突、过期、已取消、过去日期一律拒绝 */
+test('R9 改期：成功换档并释放旧时段，冲突/过期/已取消/过去日期被拒绝', () => {
+  const { Store } = loadStore();
+  Store.init();
+  const target = Store.getBookings()[0]; // e1, offset(1), s1（同日 s3 已被另一条种子预约占用）
+  // ① 改到空闲的 s4 → 成功
+  const r = Store.rescheduleBooking(target.id, target.date, 's4');
+  assert.strictEqual(r.ok, true);
+  assert.strictEqual(r.booking.slotId, 's4');
+  assert.strictEqual(r.booking.slotLabel, '16:00 - 18:00');
+  // 旧时段 s1 已释放（可再约），新时段 s4 已占用
+  assert.strictEqual(Store.hasConflict('e1', target.date, 's1'), false);
+  assert.strictEqual(Store.hasConflict('e1', target.date, 's4'), true);
+  // ② 改到已被别人占的 s3 → 冲突拒绝（排除自身也不放行）
+  const r2 = Store.rescheduleBooking(target.id, target.date, 's3');
+  assert.strictEqual(r2.ok, false);
+  assert.strictEqual(r2.reason, 'CONFLICT');
+  // ③ 改到过去日期 → 拒绝
+  const r3 = Store.rescheduleBooking(target.id, '2000-01-01', 's1');
+  assert.strictEqual(r3.ok, false);
+  assert.strictEqual(r3.reason, 'PAST_DATE');
+  // ④ 已取消的预约不能改（用未来日期的新预约，避免被“过期”抢先拦截）
+  Store.addBooking({
+    id: 'b_fut', equipId: 'e3', equipName: '数字示波器',
+    date: '2099-01-01', slotId: 's1', slotLabel: '08:00 - 10:00',
+    name: '未来', sid: 'T002', purpose: '未来',
+    createdAt: new Date().toISOString(), status: 'active',
+  });
+  const cancelled = Store.cancelBooking('b_fut');
+  assert.strictEqual(cancelled.status, 'cancelled');
+  const r4 = Store.rescheduleBooking('b_fut', '2099-01-02', 's2');
+  assert.strictEqual(r4.ok, false);
+  assert.strictEqual(r4.reason, 'NOT_ACTIVE');
+  // ⑤ 已过期的预约不能改
+  Store.addBooking({
+    id: 'b_old2', equipId: 'e3', equipName: '数字示波器',
+    date: '2000-01-01', slotId: 's1', slotLabel: '08:00 - 10:00',
+    name: '历史', sid: 'T000', purpose: '过期',
+    createdAt: '2000-01-01T00:00:00.000Z', status: 'active',
+  });
+  const r5 = Store.rescheduleBooking('b_old2', target.date, 's1');
+  assert.strictEqual(r5.ok, false);
+  assert.strictEqual(r5.reason, 'EXPIRED');
+});
+
+/* R10：占用总览矩阵（第 8 天 P0）——只含 active 且日期匹配的预约，
+   未占用档位为 null，设备/时段全集覆盖 */
+test('R10 占用总览：按日期返回设备×时段矩阵，仅统计当天有效预约', () => {
+  const { Store } = loadStore();
+  Store.init();
+  const some = Store.getBookings()[0];
+  const ov = Store.getDayOverview(some.date);
+  // 矩阵维度 = 6 设备 × 5 时段
+  assert.strictEqual(Object.keys(ov).length, 6);
+  Object.values(ov).forEach(row => {
+    assert.strictEqual(Object.keys(row).length, 5);
+    Object.values(row).forEach(v => assert.ok(v === null || (v && v.status === 'active')));
+  });
+  // 该预约所在格子有值，且内容就是这条预约
+  assert.ok(ov[some.equipId][some.slotId]);
+  assert.strictEqual(ov[some.equipId][some.slotId].id, some.id);
+  // 换一个没有任何预约的日期 → 全 null
+  const ov2 = Store.getDayOverview('2099-01-01');
+  Object.values(ov2).forEach(row => Object.values(row).forEach(v => assert.strictEqual(v, null)));
+  // 取消后总览同步释放
+  Store.cancelBooking(some.id);
+  const ov3 = Store.getDayOverview(some.date);
+  assert.strictEqual(ov3[some.equipId][some.slotId], null);
 });
