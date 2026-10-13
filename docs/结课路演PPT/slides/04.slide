@@ -1,0 +1,33 @@
+<Slide style={{ width: 1280, height: 720, position: 'relative', background: '#FFFFFF', overflow: 'hidden' }}>
+    <Box style={{ position: 'absolute', top: 0, left: 0, width: 1280, height: 80, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px' }}>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>AI 能力 · 题库定义的两个点位</Text>
+        <Text style={{ fontSize: 14, color: '#C9D8F0' }}>实验室设备预约系统 · 吴辰枫</Text>
+    </Box>
+    <Box style={{ position: 'absolute', top: 104, left: 40, width: 1200, flexDirection: 'column', gap: 14 }}>
+        <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>AI 只做它擅长的表达与归纳，规则仍由代码和测试把守</Text>
+        <Box style={{ flexDirection: 'row', gap: 22, height: 470 }}>
+            <Box style={{ width: 660, flexDirection: 'column', gap: 8 }}>
+                <Image src="assets/shot-ai.png" style={{ width: 660, height: 412, objectFit: 'cover', borderRadius: 8, border: '1px solid #D6DCE5' }} />
+                <Text style={{ fontSize: 16, color: '#4A5568' }}>AI 助手页真实界面：服务未启动时明确降级提示（顶部红点），右下为本机用量与成本对照</Text>
+            </Box>
+            <Box style={{ flex: 1, flexDirection: 'column', gap: 12 }}>
+                <Box style={{ background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 8, padding: '12px 18px', flexDirection: 'column', gap: 4, flex: 1 }}>
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#1E4FA8' }}>点位① 台账周报生成</Text>
+                    <Text style={{ fontSize: 22, color: '#1A2230', lineHeight: 1.45 }}>哪台抢手、哪台闲置、时段怎么分布——固定四节结构，400 字以内，数据说话。</Text>
+                </Box>
+                <Box style={{ background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 8, padding: '12px 18px', flexDirection: 'column', gap: 4, flex: 1 }}>
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#1E4FA8' }}>点位② 自然语言查询</Text>
+                    <Text style={{ fontSize: 22, color: '#1A2230', lineHeight: 1.45 }}>“明天下午有空闲的投影仪吗？”——只依据系统内真实预约作答，先结论后依据。</Text>
+                </Box>
+                <Box style={{ background: '#0E3F8C', borderRadius: 8, padding: '12px 18px', flexDirection: 'column', gap: 4, flex: 1 }}>
+                    <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#FFC107' }}>两条硬约束 + 兜底</Text>
+                    <Text style={{ fontSize: 22, color: '#FFFFFF', lineHeight: 1.45 }}>提示词写死“只依据给定数据”；密钥只在服务端环境变量，前端零接触。五类故障各有兜底文案——“停服看兜底”是正式演示环节。</Text>
+                </Box>
+            </Box>
+        </Box>
+    </Box>
+    <Box style={{ position: 'absolute', top: 668, left: 40, width: 1200, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>Vibe Coding 集中实践 · 实验室设备预约系统</Text>
+        <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#1E4FA8' }}>04 / 06</Text>
+    </Box>
+</Slide>

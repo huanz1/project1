@@ -1,0 +1,54 @@
+<Slide style={{ width: 1280, height: 720, position: 'relative', background: '#FFFFFF', overflow: 'hidden' }}>
+    <Box style={{ position: 'absolute', top: 0, left: 0, width: 1280, height: 80, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: '0 40px' }}>
+        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>问题域 · 设备抢手，登记还靠一本纸</Text>
+        <Text style={{ fontSize: 14, color: '#C9D8F0' }}>实验室设备预约系统 · 吴辰枫</Text>
+    </Box>
+    <Box style={{ position: 'absolute', top: 104, left: 40, width: 1200, flexDirection: 'column', gap: 16 }}>
+        <Text style={{ fontSize: 32, fontWeight: 'bold', color: '#0E3F8C' }}>6 台设备 × 5 个时段，三处结构性缺陷</Text>
+        <Box style={{ flexDirection: 'row', gap: 24, height: 470 }}>
+            <Box style={{ width: 700, flexDirection: 'column', gap: 14 }}>
+                <Box style={{ flexDirection: 'row', gap: 16, alignItems: 'center', background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 8, padding: '12px 20px', flex: 1 }}>
+                    <Box style={{ width: 46, height: 46, background: '#1E4FA8', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>01</Text>
+                    </Box>
+                    <Box style={{ flexDirection: 'column', gap: 4, flex: 1 }}>
+                        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#1A2230' }}>占用不可见</Text>
+                        <Text style={{ fontSize: 22, color: '#4A5568', lineHeight: 1.45 }}>登记本锁在实验室桌上，离开现场无法查询——<span style={{ color: '#D9534F' }}>到场才知道被占，时间成本白花。</span></Text>
+                    </Box>
+                </Box>
+                <Box style={{ flexDirection: 'row', gap: 16, alignItems: 'center', background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 8, padding: '12px 20px', flex: 1 }}>
+                    <Box style={{ width: 46, height: 46, background: '#1E4FA8', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>02</Text>
+                    </Box>
+                    <Box style={{ flexDirection: 'column', gap: 4, flex: 1 }}>
+                        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#1A2230' }}>没有互斥约束</Text>
+                        <Text style={{ fontSize: 22, color: '#4A5568', lineHeight: 1.45 }}>同一时段可以被重复登记，谁先到算谁的——<span style={{ color: '#D9534F' }}>冲突全靠人肉协调，无据可查。</span></Text>
+                    </Box>
+                </Box>
+                <Box style={{ flexDirection: 'row', gap: 16, alignItems: 'center', background: '#F7F9FC', border: '1px solid #D6DCE5', borderRadius: 8, padding: '12px 20px', flex: 1 }}>
+                    <Box style={{ width: 46, height: 46, background: '#1E4FA8', borderRadius: 6, alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>03</Text>
+                    </Box>
+                    <Box style={{ flexDirection: 'column', gap: 4, flex: 1 }}>
+                        <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#1A2230' }}>使用率无从统计</Text>
+                        <Text style={{ fontSize: 22, color: '#4A5568', lineHeight: 1.45 }}>签名不留结构化数据，设备忙闲全凭印象——<span style={{ color: '#D9534F' }}>采购与排期只能拍脑袋。</span></Text>
+                    </Box>
+                </Box>
+            </Box>
+            <Box style={{ width: 476, flexDirection: 'column', gap: 12, background: '#E8EFF8', borderRadius: 8, padding: '18px 22px' }}>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#0E3F8C' }}>从痛点倒推需求</Text>
+                <Text style={{ fontSize: 22, color: '#1A2230', lineHeight: 1.5 }}>作为学生，我想<span style={{ fontWeight: 'bold' }}>出发前就查到</span>哪天哪个时段空着，免得白跑。</Text>
+                <Text style={{ fontSize: 22, color: '#1A2230', lineHeight: 1.5 }}>作为学生，我想<span style={{ fontWeight: 'bold' }}>提交后立刻知道</span>约没约上，不用到场再协商。</Text>
+                <Text style={{ fontSize: 22, color: '#1A2230', lineHeight: 1.5 }}>作为管理员，我想看到<span style={{ fontWeight: 'bold' }}>使用率统计</span>，让采购排期有依据。</Text>
+                <Box style={{ flex: 1 }} />
+                <Box style={{ background: '#0E3F8C', borderRadius: 8, padding: '12px 16px' }}>
+                    <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF', lineHeight: 1.45 }}>所以呢：约束要搬进系统，而不是贴在墙上——这些诉求已逐条写进 PRD 验收表。</Text>
+                </Box>
+            </Box>
+        </Box>
+    </Box>
+    <Box style={{ position: 'absolute', top: 668, left: 40, width: 1200, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>Vibe Coding 集中实践 · 实验室设备预约系统</Text>
+        <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#1E4FA8' }}>02 / 06</Text>
+    </Box>
+</Slide>
